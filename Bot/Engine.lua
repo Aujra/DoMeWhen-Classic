@@ -4,6 +4,7 @@ local Engine = DMW.Bot.Engine
 local Grindbot = DMW.Bot.Grindbot
 local Fishbot = DMW.Bot.Fishbot
 local Follower = DMW.Bot.Follower
+local Questbot = DMW.Bot.Questbot
 local Navigation = DMW.Bot.Navigation
 local Misc = DMW.Bot.Misc
 local Log = DMW.Bot.Log
@@ -26,7 +27,7 @@ function Engine:Pulse()
     if not folderChecks then self:SetupFolders() folderChecks = true end
     if not readItemFile then self:LoadFile() SetProfiles() readItemFile = true C_Timer.After(1, function() readItemFile = false end) end
     Navigation:Movement()
-    -- If Engine is enabled then start choice of bot.
+    -- If Engine is enabled then start choice of bot
     if DMW.Settings.profile.HUD.Engine == 1 and self:IsReady() then
         -- If we chose Grindbot then pulse Grindbot.
         if DMW.Settings.profile.HUD.BotMode == 1 then
@@ -35,6 +36,9 @@ function Engine:Pulse()
             Fishbot:Pulse()
         elseif DMW.Settings.profile.HUD.BotMode == 3 then
             Follower:Pulse()
+        elseif DMW.Settings.profile.HUD.BotMode == 4 then
+            Log:DebugInfo(Questbot:Pulse())
+            Questbot:Pulse()
         end
     else
         if Misc:WorldMapHook() then return end

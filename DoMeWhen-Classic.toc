@@ -74,6 +74,8 @@ Bot\Grindbot\Grindbot.lua
 Bot\Follower\Follower.lua
 
 Bot\Fishbot\Fishbot.lua
+Bot\Questbot\Questbot.lua
+
 Bot\Engine.lua
 
 Enums\Spells\Global.lua
