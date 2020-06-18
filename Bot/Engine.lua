@@ -37,7 +37,6 @@ function Engine:Pulse()
         elseif DMW.Settings.profile.HUD.BotMode == 3 then
             Follower:Pulse()
         elseif DMW.Settings.profile.HUD.BotMode == 4 then
-            Log:DebugInfo(Questbot:Pulse())
             Questbot:Pulse()
         end
     else
