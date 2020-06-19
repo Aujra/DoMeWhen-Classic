@@ -93,6 +93,10 @@ function Navigation:NearHotspot(yrds)
     return DMW.Player.Position:NearAny(DMW.Settings.profile.Grind.HotSpots, yrds)
 end
 
+function Navigation:NearHotspotArray(yrds, hotspots)
+    return DMW.Player.Position:NearAny(hotspots, yrds)
+end
+
 function Navigation:DrawVisuals()
     LibDraw.SetWidth(4)
     LibDraw.SetColorRaw(0, 128, 128, 100)

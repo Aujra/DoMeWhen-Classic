@@ -19,11 +19,13 @@ function QuestHelper:IsOnQuest(questId)
 end
 
 function QuestHelper:ShouldTurnIn(questId)
+    return IsQuestComplete(questId)
+end
+
+function QuestHelper:GetQuestName(questId)
     local qlink = GetQuestLogIndexByID(questId)
-    local title, level, suggestedGroup, isHeader, isCollapsed, isComplete,
-  frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI,
-  isTask, isStory = GetQuestLogTitle(qlink);
-    return isComplete > 0
+    local title = GetQuestLogTitle(qlink)
+    return title
 end
 
 function QuestHelper:GetNPC(name)
