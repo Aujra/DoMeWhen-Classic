@@ -13,6 +13,10 @@ function QuestHelper:ShouldPickupQuest(questID)
     end
 end
 
+function QuestHelper:Finished(questId) 
+    return IsQuestFlaggedCompleted(questId)
+end
+
 function QuestHelper:IsOnQuest(questId)
     local qlink = GetQuestLogIndexByID(questId)
     return qlink > 0
