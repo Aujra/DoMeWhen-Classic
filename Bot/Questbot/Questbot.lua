@@ -55,6 +55,9 @@ local Settings = {
 
 local HotSpots = {}
 
+local pickingup = 0
+local droppingoff = 0
+
 --- [questid] = { title, pickupnpc, pickupxyz, dropoffxyz, hotspots{}, dropoffnpc, questtype, {mobids}, {gatherids} }
 local questslist = {
     [4641] = {"Your place in the world", "Kaltunk", {-601, -4251, 0}, {-601, -4190, 0}, {}, "Gornek", "turnin", {}, {}},
@@ -123,66 +126,73 @@ local QuestTitleFromID = setmetatable({}, { __index = function(t, id)
     end
 end })
 
-function Questbot:PickupQuest(name, npcLoc, npcName)
-    ModeFrame.text:SetText("Picking up quest "..name.." from "..npcName)
-    local questGiver = QuestHelper:GetNPC(npcName)
-        Navigation:MoveTo(npcLoc[1], npcLoc[2], npcLoc[3])
-        if questGiver.Distance >= 5 then
-        else
-            Navigation:StopMoving()
-            InteractUnit(questGiver.Pointer)
-        end
+function Questbot:PickupQuest(questID)
+    local QuestGiver, name, npcname, spawn = QuestHelper:GetStartNPC(questID)
+    local giver = QuestHelper:GetNPC(npcname)
+    Navigation:MoveTo(spawn.X, spawn.Y, spawn.Z)
+    if giver and giver.Distance <= 2 then
+        Navigation:StopMoving()
+        InteractUnit(giver.Pointer)
+    end
+    ModeFrame.text:SetText("Picking up quest "..name.." from "..npcname)
 end
-function Questbot:TurnInQuest(name, npcLoc, npcName)
-    ModeFrame.text:SetText("Turning in quest "..name.." to "..npcName)
-    local questGiver = QuestHelper:GetNPC(npcName)
-    Navigation:MoveTo(npcLoc[1], npcLoc[2], npcLoc[3])
-        if questGiver.Distance >= 5 then
-        else
-            Navigation:StopMoving()
-            InteractUnit(questGiver.Pointer)
-            HotSpots = {}
-        end
-end
-
-function Questbot:Pulse()
-    if QuestHelper:Finished(qorder[1]) then
-        table.remove(qorder, 1)
+function Questbot:TurnInQuest(questID)
+    local QuestGiver, name, npcname, spawn = QuestHelper:GetEndNPC(questID)
+    local giver = QuestHelper:GetNPC(npcname)
+    Navigation:MoveTo(spawn.X, spawn.Y, spawn.Z)
+    if giver and giver.Distance <= 2 then
+        Navigation:StopMoving()
+        InteractUnit(giver.Pointer)
     end
-    if QuestHelper:ShouldTurnIn(qorder[1]) then
-        ModeFrame.text:SetText("Turning in quest "..questslist[qorder[1]][1].." to "..questslist[qorder[1]][6])
-        local questGiver = QuestHelper:GetNPC(questslist[qorder[1]][6])
-        Navigation:MoveTo(questslist[qorder[1]][4][1], questslist[qorder[1]][4][2], questslist[qorder[1]][4][3])
-        if questGiver.Distance <= 5 then
-            Navigation:StopMoving()
-            InteractUnit(questGiver.Pointer)
-            table.remove(qorder, 1)
-            HotSpots = {}
-        end
-    end
-
-    if QuestHelper:ShouldPickupQuest(qorder[1]) then
-        ModeFrame.text:SetText("Picking up quest "..questslist[qorder[1]][1].." from "..questslist[qorder[1]][2])
-        local questGiver = QuestHelper:GetNPC(questslist[qorder[1]][2])
-        Navigation:MoveTo(questslist[qorder[1]][3][1], questslist[qorder[1]][3][2], questslist[qorder[1]][3][3])
-        if questGiver.Distance >= 5 then
-        else
-            Navigation:StopMoving()
-            InteractUnit(questGiver.Pointer)
-            HotSpots = {}
-        end
-    end
-    
-    if QuestHelper:IsOnQuest(qorder[1]) and not QuestHelper:ShouldTurnIn(qorder[1]) then     
-        ModeFrame.text:SetText("Doing "..QuestHelper:GetQuestName(qorder[1]))
-        local point = Point(questslist[qorder[1]][5][1], questslist[qorder[1]][5][2], questslist[qorder[1]][5][3])
-        table.insert(HotSpots, point)
-        table.insert(HotSpots, point)
-        Questbot:DoQuestTask(questslist[qorder[1]])
-    end
+    ModeFrame.text:SetText("Turning in quest "..name.." to "..npcname)
 end
 
-function Questbot:DoQuestTask(thequest)
+function Questbot:Pulse()  
+    if QuestHelper:ShouldPickupQuest(4641) then
+        Questbot:PickupQuest(4641)
+    end
+    if (QuestHelper:ShouldTurnIn(4641)) then
+        Questbot:TurnInQuest(4641)
+    end
+
+    if QuestHelper:Finished(4641) and QuestHelper:ShouldPickupQuest(788) then
+        self:PickupQuest(788)
+    end
+    if QuestHelper:IsOnQuest(788) and not QuestHelper:ShouldTurnIn(788) then
+        ModeFrame.text:SetText("Doing quest Cutting Teeth")
+        HotSpots = QuestHelper:GetHotSpots(788)
+        self:DoQuestTask(nil)
+    end
+    if (QuestHelper:ShouldTurnIn(788)) then
+        Questbot:TurnInQuest(788)
+    end
+
+    --- do together
+    if QuestHelper:Finished(788) and QuestHelper:ShouldPickupQuest(789) then
+        Questbot:PickupQuest(789)
+    end
+    if QuestHelper:Finished(788) and QuestHelper:ShouldPickupQuest(4402) and QuestHelper:IsOnQuest(789) then
+        Questbot:PickupQuest(4402)
+    end
+    if QuestHelper:Finished(788) and QuestHelper:ShouldPickupQuest(790) and QuestHelper:IsOnQuest(4402) then
+        Questbot:PickupQuest(790)
+    end
+    if QuestHelper:IsOnQuest(789) and QuestHelper:IsOnQuest(4402) and QuestHelper:IsOnQuest(790) then
+        HotSpots = QuestHelper:GetHotSpots(789)
+        Questbot:DoQuestTask();
+    end
+    if (QuestHelper:ShouldTurnIn(4402) and QuestHelper:ShouldTurnIn(789) and QuestHelper:ShouldTurnIn(790)) then
+        Questbot:TurnInQuest(4402)
+    end
+    if (QuestHelper:Finished(4402) and QuestHelper:ShouldTurnIn(789)) then
+        Questbot:TurnInQuest(789)
+    end
+    if QuestHelper:Finished(789) and QuestHelper:ShouldTurnIn(790) then
+        self:TurnInQuest(790)
+    end
+end
+
+function Questbot:DoQuestTask()
     if not Throttle then
         self:LoadSettings()
         if DMW.Settings.profile.Grind.openClams then Misc:ClamTask() end
@@ -196,11 +206,9 @@ function Questbot:DoQuestTask(thequest)
 
     if DMW.Player.Casting then self:ResetMoveToLoot() end -- Reset if casting
 
-    local HasQuestNPC, theNPC = self:QuestNPCSearch()
-
  -- This sets our state
- if not HasQuestNPC and not (PauseFlags.skinDelay and DMW.Settings.profile.Grind.doSkin) and not (PauseFlags.waitingForLootable and DMW.Settings.profile.Helpers.AutoLoot) then 
-    self:SwapMode(thequest) 
+ if not (PauseFlags.skinDelay and DMW.Settings.profile.Grind.doSkin) and not (PauseFlags.waitingForLootable and DMW.Settings.profile.Helpers.AutoLoot) then 
+    self:SwapMode() 
 end
 if (HasQuestNPC) then
     Questbot.Mode = Modes.Interact
@@ -295,7 +303,7 @@ function Questbot:Rest()
     end
 end
 
-function Questbot:SwapMode(thequest)
+function Questbot:SwapMode()
     if UnitIsDeadOrGhost('player') then
         Questbot.Mode = Modes.Dead
         return
@@ -308,7 +316,6 @@ function Questbot:SwapMode(thequest)
     local hasOre = Gathering:OreSearch()
     local hasHerb = Gathering:HerbSearch()
     local hasQuest = Gathering:QuestSearch()
-    local HasQuestNPC = self:QuestNPCSearch(thequest)
 
     -- If we arent in combat and we arent standing (if our health is less than 95 percent and we currently have the eating buff or we are a caster and our mana iss less than 95 and we have the drinking buff) then set mode to rest.
     if not DMW.Player.Swimming and not DMW.Player.Combat and not DMW.Player:Standing() and (DMW.Player.HP < 95 and Eating or UnitPower('player', 0) > 0 and (UnitPower('player', 0) / UnitPowerMax('player', 0) * 100) < 95 and Drinking) then
