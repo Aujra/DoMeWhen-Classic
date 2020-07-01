@@ -136,7 +136,7 @@ end
 function Combat:SearchAttackableQuest()
     -- Search for hostiles around us and attack them first.
     for _, Unit in pairs(DMW.Attackable) do
-        if Unit.Quest and UnitClassification(Unit.Pointer) == 'normal' and UnitReaction(Unit.Pointer, 'player') < 4 and Unit.Distance <= Unit:AggroDistance() + 10 and (not UnitIsPVP(Unit.Pointer) or ObjectCreator(Unit.Pointer) and not UnitIsPVP(ObjectCreator(Unit.Pointer))) and not UnitIsTapDenied(Unit.Pointer) then
+        if Unit.Quest or UnitClassification(Unit.Pointer) == 'normal' and UnitReaction(Unit.Pointer, 'player') < 4 and Unit.Distance <= Unit:AggroDistance() + 10 and (not UnitIsPVP(Unit.Pointer) or ObjectCreator(Unit.Pointer) and not UnitIsPVP(ObjectCreator(Unit.Pointer))) and not UnitIsTapDenied(Unit.Pointer) then
             return true, Unit
         end
     end
@@ -151,7 +151,7 @@ function Combat:SearchAttackableQuest()
 
     local Table = {}
     for _, Unit in pairs(DMW.Units) do
-        if Unit.Distance < 80 and Unit.Quest and UnitClassification(Unit.Pointer) == 'normal' and self:IsGoodUnit(Unit.Pointer) and #Unit:GetHostiles(20) < 2 and Unit.NavDistance < DMW.Settings.profile.Grind.RoamDistance * 1.5 then
+        if Unit.Distance < 50 and Unit.Quest and UnitClassification(Unit.Pointer) == 'normal' and self:IsGoodUnit(Unit.Pointer) and #Unit:GetHostiles(20) < 2 and Unit.NavDistance < DMW.Settings.profile.Grind.RoamDistance * 1.5 then
             table.insert(Table, Unit)
         end
     end
@@ -178,7 +178,7 @@ end
 function Combat:SearchEnemy()
     local Table = {}
     for _, Unit in pairs(DMW.Attackable) do
-        if Unit.Distance < 100 then
+        if Unit.Distance < 50 then
             table.insert(Table, Unit)
         end
     end

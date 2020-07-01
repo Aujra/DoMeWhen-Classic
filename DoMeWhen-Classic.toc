@@ -65,8 +65,6 @@ Helpers\Swing.lua
 Bot\Log.lua
 Bot\Navigation.lua
 
-QuestDB\questDB.lua
-
 Bot\Grindbot\Gathering.lua
 Bot\Grindbot\Vendor.lua
 Bot\Grindbot\Combat.lua

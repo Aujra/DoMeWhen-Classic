@@ -262,6 +262,50 @@ function Navigation:GrindRoam()
     end
 end
 
+function Navigation:GrindRoamHotSpots(hotspots)
+    local HotSpots = hotspots
+
+    if not RandomedWaypoint and DMW.Settings.profile.Grind.randomizeWaypoints and self:NearHotspot(250) then
+        WaypointX, WaypointY, WaypointZ = self:RandomizePosition(
+            HotSpots[HotSpotIndex].X,
+            HotSpots[HotSpotIndex].Y,
+            HotSpots[HotSpotIndex].Z,
+            DMW.Settings.profile.Grind.randomizeWaypointDistance
+        )
+        if WaypointX and WaypointZ then RandomedWaypoint = true end
+        return
+    end
+
+    if DMW.Settings.profile.Grind.randomizeWaypoints and self:NearHotspot(250) then
+        local PX, PY, PZ = ObjectPosition('player')
+
+        if WaypointX and WaypointY and WaypointZ then
+            self:MoveTo(WaypointX, WaypointY, WaypointZ)
+            local Distance = GetDistanceBetweenPositions(PX, PY, PZ, WaypointX, WaypointY, WaypointZ)
+            if HotSpotIndex == #HotSpots and Distance < 5 then
+                HotSpotIndex = 1
+                RandomedWaypoint = false
+            else
+                if Distance < 5 then
+                    HotSpotIndex = HotSpotIndex + 1
+                    RandomedWaypoint = false
+                end
+            end
+        end
+    else
+        self:MoveTo(HotSpots[HotSpotIndex].X, HotSpots[HotSpotIndex].Y, HotSpots[HotSpotIndex].Z)
+        local Distance = DMW.Player.Position:Distance(HotSpots[HotSpotIndex])
+        if HotSpotIndex == #HotSpots and Distance < 5 then
+            -- start over from first hotspot
+            HotSpotIndex = 1
+        elseif Distance < 5 then
+            -- move to next hotspot
+            HotSpotIndex = HotSpotIndex + 1
+        end
+    end
+    print("END")
+end
+
 function Navigation:InitVendorSafePath()
     self:SortVendorWaypoints()
     VendorWaypointIndex = 1
