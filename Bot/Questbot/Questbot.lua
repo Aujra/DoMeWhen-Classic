@@ -104,37 +104,6 @@ end)
 local qlist 
 local profileset = false
 
-function Questbot:SetProfile()
-    qlist = {
-        {"Pickup", 747},
-        {"Pickup", 752},
-        {"Turnin", 752},
-        {"DoQuest", 747},
-        {"Turnin", 747},
-        {"Pickup", 753},
-        {"DoQuest", 753},
-        {"Turnin", 753},
-        {"Vendor", 3883},
-        {"Pickup", 750},
-        {"Pickup", 755},
-        {"Pickup", 3094},
-        {"DoQuest", 750},
-        {"Turnin", 750},
-        {"Turnin", 3094},
-        {"Turnin", 755},
-        {"Pickup", 757},
-        {"Pickup", 780},
-        {"Pickup", 3376},
-        {"DoQuest", 757},
-        {"DoQuest", 780},
-        {"DoQuest", 3376},
-        {"Turnin", 757},
-        {"Turnin", 780},
-        {"Turnin", 3376}
-    }
-    profileset = true
-end
-
 local MyScanningTooltip = CreateFrame("GameTooltip", "MyScanningTooltip", UIParent, "GameTooltipTemplate")
 
 local QuestTitleFromID = setmetatable({}, { __index = function(t, id)
@@ -148,9 +117,13 @@ local QuestTitleFromID = setmetatable({}, { __index = function(t, id)
     end
 end })
 
-function Questbot:PickupQuest(questID)
+function Questbot:PickupQuest(questID, class)
     if not QuestHelper:ShouldPickupQuest(questID) then
-        head = table.remove(qlist, 1)
+        head = table.remove(DMW.Settings.profile.Quest, 1)
+        return
+    end
+    if (class and DMW.Player.Class ~= class:upper()) then
+        head = table.remove(DMW.Settings.profile.Quest, 1)
         return
     end
     local QuestGiver, name, npcname, spawn = QuestHelper:GetStartNPC(questID)
@@ -159,14 +132,18 @@ function Questbot:PickupQuest(questID)
     if giver and giver.Distance <= 2 then
         Navigation:StopMoving()
         InteractUnit(giver.Pointer)
-        head = table.remove(qlist, 1)
+        head = table.remove(DMW.Settings.profile.Quest, 1)
         HotSpots = {}
     end
     ModeFrame.text:SetText("Picking up quest "..name.." from "..npcname)
 end
 function Questbot:TurnInQuest(questID)
     if not QuestHelper:ShouldTurnIn(questID) then
-        head = table.remove(qlist, 1)
+        head = table.remove(DMW.Settings.profile.Quest, 1)
+        return
+    end
+    if (class and DMW.Player.Class ~= class:upper()) then
+        head = table.remove(DMW.Settings.profile.Quest, 1)
         return
     end
     local QuestGiver, name, npcname, spawn = QuestHelper:GetEndNPC(questID)
@@ -175,7 +152,7 @@ function Questbot:TurnInQuest(questID)
     if giver and giver.Distance <= 2 then
         Navigation:StopMoving()
         InteractUnit(giver.Pointer)
-        head = table.remove(qlist, 1)
+        head = table.remove(DMW.Settings.profile.Quest, 1)
         HotSpots = {}
     end
     ModeFrame.text:SetText("Turning in quest "..name.." to "..npcname)
@@ -183,7 +160,7 @@ end
 
 function Questbot:VendorRun(npcid)
     if Misc:GetFreeSlots() < 4 then
-        head = table.remove(qlist, 1)
+        head = table.remove(DMW.Settings.profile.Quest, 1)
         return
     end
     local fullnpc, name, spawn = QuestHelper:getNPC(npcid)
@@ -192,7 +169,7 @@ function Questbot:VendorRun(npcid)
     if vendor and vendor.Distance <= 2 then
         Navigation:StopMoving()
         InteractUnit(vendor.Pointer)
-        head = table.remove(qlist, 1)
+        head = table.remove(DMW.Settings.profile.Quest, 1)
         HotSpots = {}
     end
     ModeFrame.text:SetText("Vendor run")
@@ -205,21 +182,24 @@ function Questbot:Train(npcid)
         Navigation:StopMoving()
         InteractUnit(vendor.Pointer)
         BuyTrainerService(0)
-        head = table.remove(qlist, 1)
+        head = table.remove(DMW.Settings.profile.Quest, 1)
         HotSpots = {}
     end
     ModeFrame.text:SetText("Training run")
 end
 
-function Questbot:ParseProfile(mode, questid)
+function Questbot:ParseProfile(mode, questid, class)
     if (mode == "Pickup") then
-        self:PickupQuest(questid)
+        self:PickupQuest(questid,class)
     end
     if (mode == "Turnin") then
-        self:TurnInQuest(questid)
+        self:TurnInQuest(questid, class)
     end
     if (mode == "DoQuest") then
-        self:DoQuestTask(questid)
+        self:DoQuestTask(questid, class)
+    end
+    if (mode == "Kill") then
+
     end
     if (mode == "Vendor") then
         self:VendorRun(questid)
@@ -230,23 +210,18 @@ function Questbot:ParseProfile(mode, questid)
 end
 
 function Questbot:Pulse()  
-if not profileset then
-    self:SetProfile()
-end
-
 if UnitIsDeadOrGhost('player') then
     Navigation:MoveToCorpse()
     TaskFrame.text:SetText('Corpse Run')
     return
 end
-
-if profileset and qlist[1] then
-    -- print(qlist[1][1].." "..qlist[1][2])
-    self:ParseProfile(qlist[1][1], qlist[1][2])
+if DMW.Settings.profile.Quest[1] then
+    self:ParseProfile(DMW.Settings.profile.Quest[1][1], DMW.Settings.profile.Quest[1][2], DMW.Settings.profile.Quest[1][3])
 end
 end
 
-function Questbot:DoQuestTask(questid)
+function Questbot:DoQuestTask(questid, class)
+    local questid = tonumber(questid)
     ModeFrame.text:SetText("Doing quest "..QuestHelper.questData[questid][1].."   Hotspot count: "..#DMW.Settings.profile.Grind.HotSpots)
     if not Throttle then
         self:LoadSettings()
@@ -258,12 +233,17 @@ function Questbot:DoQuestTask(questid)
         Throttle = true
         C_Timer.After(0.1, function() Throttle = false end)
     end
-    if QuestHelper:ShouldTurnIn(questid) then
-        head = table.remove(qlist, 1)
+    if QuestHelper:ShouldTurnIn(questid) and not QuestHelper:ShouldDoQuest(questid) then
+        head = table.remove(DMW.Settings.profile.Quest, 1)
         return
     end
     if QuestHelper:Finished(questid) then
-        head = table.remove(qlist, 1)
+        head = table.remove(DMW.Settings.profile.Quest, 1)
+        return
+    end
+
+    if (class and DMW.Player.Class ~= class:upper()) then
+        head = table.remove(DMW.Settings.profile.Quest, 1)
         return
     end
  

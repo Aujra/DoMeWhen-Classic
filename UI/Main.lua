@@ -1729,18 +1729,46 @@ end
 
 function LoadProfileQuest()
     if currentProfileQuest then
-        local profileContent = ReadFile(GetHackDirectory() .. "/Lilium/Questbot/" .. currentLoadedProfilesQuest[currentProfile])
-        local check, content = serializer:Deserialize(base64:decode(profileContent))
-        DMW.Bot.Log:DebugInfo(profileContent)
-        if profileContent and check then
-            profileName = currentLoadedProfilesQuest[currentProfile]:gsub(".txt", "")
-            -- DMW.Settings.profile.Grind = content
-            -- DMW.Settings.profile.Grind.HotSpots = MigratePoints(DMW.Settings.profile.Grind.HotSpots)
-            -- DMW.Settings.profile.Grind.VendorWaypoints = MigratePoints(DMW.Settings.profile.Grind.VendorWaypoints)
-            -- DMW.Settings.profile.Grind.MountBlacklist = MigratePoints(DMW.Settings.profile.Grind.MountBlacklist)
-            DMW.Bot.Log:DebugInfo('Loaded Profile ' .. currentLoadedProfilesQuest[currentProfile])
+        local profileContent = ReadFile(GetHackDirectory() .. "/Lilium/Questbot/" .. currentLoadedProfilesQuest[currentProfileQuest])
+        if profileContent then
+            profileName = currentLoadedProfilesQuest[currentProfileQuest]:gsub(".lua", "")
+            DMW.Settings.profile.Quest = ParseQuest(profileContent)
+            DMW.Bot.Log:DebugInfo('Loaded Profile ' .. currentLoadedProfilesQuest[currentProfileQuest])
         end
     end
+end
+
+function ParseQuest(profile)
+    local questlist = {}
+    local lines = { ("\n"):split(profile) }
+    for _, line in pairs(lines) do
+        local tags = { ("|"):split(line) }
+        local parsed = parseQuestLine(tags, line)
+        if parsed then
+            table.insert(questlist, parseQuestLine(tags, line))
+        end
+    end
+    return questlist
+end
+function parseQuestLine(tags, line)
+    local action = tags[1]:sub(1,1)
+    local questid = tags[3]
+    local act = nil
+    local class = nil
+    if (action == "A") then
+        act = "Pickup"
+    end
+    if (action == "C") then
+        act = "DoQuest"
+    end
+    if (action == "T" or action == "t") then
+        act = "Turnin"
+    end
+    if act then
+        local class, race  = line:match("|C|([^|]*)|?"), line:match("|R|([^|]*)|?")
+        return { act, questid, class }
+    end
+    return nil
 end
 
 function CheckNextProfile()
@@ -1777,9 +1805,9 @@ function SetProfiles()
 end
 
 function SetProfilesQuest()
-    local Files = GetDirectoryFiles(GetHackDirectory() .. "/Lilium/Questbot/*.txt")
+    local Files = GetDirectoryFiles(GetHackDirectory() .. "/Lilium/Questbot/*.lua")
     local Pleasant = {}
-    for i = 1, #Files do content = Files[i]:gsub(".txt", "") table.insert(Pleasant, content) end
+    for i = 1, #Files do content = Files[i]:gsub(".lua", "") table.insert(Pleasant, content) end
 
     currentLoadedProfilesQuest = Files
     Options.args.GrindTab.args.ProfilesTab.args.loadedProfilesQuest.values = Pleasant
