@@ -143,7 +143,7 @@ function Questbot:PickupQuest(questID, class)
     end
     ModeFrame.text:SetText("Picking up quest "..name.." from "..npcname)
 end
-function Questbot:TurnInQuest(questID)
+function Questbot:TurnInQuest(questID, class)
     if QuestHelper:Finished(questID) then
         head = table.remove(DMW.Settings.profile.Quest, 1)
         HotSpots = {}

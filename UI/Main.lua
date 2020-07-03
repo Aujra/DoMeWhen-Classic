@@ -1755,6 +1755,9 @@ function parseQuestLine(tags, line)
     local questid = tags[3]
     local act = nil
     local class = nil
+    if (action == "V") then
+        act = "Vendor"
+    end
     if (action == "A") then
         act = "Pickup"
     end
