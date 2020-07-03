@@ -122,25 +122,31 @@ function Questbot:PickupQuest(questID, class)
         head = table.remove(DMW.Settings.profile.Quest, 1)
         return
     end
+    if QuestHelper:IsOnQuest(questID) then
+        head = table.remove(DMW.Settings.profile.Quest, 1)
+        HotSpots = {}
+    end
     if (class and DMW.Player.Class ~= class:upper()) then
         head = table.remove(DMW.Settings.profile.Quest, 1)
         return
     end
     local QuestGiver, name, npcname, spawn = QuestHelper:GetStartNPC(questID)
     local giver = QuestHelper:GetNPCName(npcname)
-    Navigation:MoveTo(spawn.X, spawn.Y, spawn.Z)
-    if giver and giver.Distance <= 2 then
-        Navigation:StopMoving()
-        InteractUnit(giver.Pointer)
-        head = table.remove(DMW.Settings.profile.Quest, 1)
-        HotSpots = {}
+    if not giver or giver.Distance > 40 then
+        Navigation:MoveTo(spawn.X, spawn.Y, spawn.Z)
+    end
+    if giver and giver.Distance < 40 then
+    Navigation:MoveTo(giver.PosX, giver.PosY, giver.PosZ)
+        if giver.Distance < 2 then
+            InteractUnit(giver.Pointer)
+        end
     end
     ModeFrame.text:SetText("Picking up quest "..name.." from "..npcname)
 end
 function Questbot:TurnInQuest(questID)
-    if not QuestHelper:ShouldTurnIn(questID) then
+    if QuestHelper:Finished(questID) then
         head = table.remove(DMW.Settings.profile.Quest, 1)
-        return
+        HotSpots = {}
     end
     if (class and DMW.Player.Class ~= class:upper()) then
         head = table.remove(DMW.Settings.profile.Quest, 1)
@@ -148,12 +154,14 @@ function Questbot:TurnInQuest(questID)
     end
     local QuestGiver, name, npcname, spawn = QuestHelper:GetEndNPC(questID)
     local giver = QuestHelper:GetNPCName(npcname)
-    Navigation:MoveTo(spawn.X, spawn.Y, spawn.Z)
-    if giver and giver.Distance <= 2 then
-        Navigation:StopMoving()
-        InteractUnit(giver.Pointer)
-        head = table.remove(DMW.Settings.profile.Quest, 1)
-        HotSpots = {}
+    if not giver or giver.Distance > 40 then
+        Navigation:MoveTo(spawn.X, spawn.Y, spawn.Z)
+    end
+    if giver then
+        Navigation:MoveTo(giver.PosX, giver.PosY, giver.PosZ)
+        if giver.Distance < 2 then
+            InteractUnit(giver.Pointer)
+        end
     end
     ModeFrame.text:SetText("Turning in quest "..name.." to "..npcname)
 end
