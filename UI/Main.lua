@@ -1766,7 +1766,7 @@ function parseQuestLine(tags, line)
     end
     if act then
         local class, race  = line:match("|C|([^|]*)|?"), line:match("|R|([^|]*)|?")
-        return { act, questid, class }
+        return { act, questid, class, race }
     end
     return nil
 end

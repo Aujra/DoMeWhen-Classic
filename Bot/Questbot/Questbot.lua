@@ -117,7 +117,7 @@ local QuestTitleFromID = setmetatable({}, { __index = function(t, id)
     end
 end })
 
-function Questbot:PickupQuest(questID, class)
+function Questbot:PickupQuest(questID, class, race)
     if not QuestHelper:ShouldPickupQuest(questID) then
         head = table.remove(DMW.Settings.profile.Quest, 1)
         return
@@ -130,12 +130,19 @@ function Questbot:PickupQuest(questID, class)
         head = table.remove(DMW.Settings.profile.Quest, 1)
         return
     end
+    local r, ren = UnitRace("player")
+    print(race)
+    print(r)
+    if (race and r ~= race) then
+        head = table.remove(DMW.Settings.profile.Quest, 1)
+        return
+    end
     local QuestGiver, name, npcname, spawn = QuestHelper:GetStartNPC(questID)
     local giver = QuestHelper:GetNPCName(npcname)
-    if not giver or giver.Distance > 40 then
+    if not giver or giver.Distance >= 40 then
         Navigation:MoveTo(spawn.X, spawn.Y, spawn.Z)
     end
-    if giver and giver.Distance < 40 then
+    if giver and giver.Distance < 39 then
     Navigation:MoveTo(giver.PosX, giver.PosY, giver.PosZ)
         if giver.Distance < 2 then
             InteractUnit(giver.Pointer)
@@ -143,7 +150,7 @@ function Questbot:PickupQuest(questID, class)
     end
     ModeFrame.text:SetText("Picking up quest "..name.." from "..npcname)
 end
-function Questbot:TurnInQuest(questID)
+function Questbot:TurnInQuest(questID, class, race)
     if QuestHelper:Finished(questID) then
         head = table.remove(DMW.Settings.profile.Quest, 1)
         HotSpots = {}
@@ -152,13 +159,18 @@ function Questbot:TurnInQuest(questID)
         head = table.remove(DMW.Settings.profile.Quest, 1)
         return
     end
+    local r, ren = UnitRace("player")
+    if (race and r ~= race) then
+        head = table.remove(DMW.Settings.profile.Quest, 1)
+        return
+    end
     local QuestGiver, name, npcname, spawn = QuestHelper:GetEndNPC(questID)
     local giver = QuestHelper:GetNPCName(npcname)
-    if not giver or giver.Distance > 40 then
+    if not giver or giver.Distance >= 40 then
         Navigation:MoveTo(spawn.X, spawn.Y, spawn.Z)
     end
-    if giver then
-        Navigation:MoveTo(giver.PosX, giver.PosY, giver.PosZ)
+    if giver and giver.Distance < 39 then
+    Navigation:MoveTo(giver.PosX, giver.PosY, giver.PosZ)
         if giver.Distance < 2 then
             InteractUnit(giver.Pointer)
         end
@@ -196,15 +208,15 @@ function Questbot:Train(npcid)
     ModeFrame.text:SetText("Training run")
 end
 
-function Questbot:ParseProfile(mode, questid, class)
+function Questbot:ParseProfile(mode, questid, class, race)
     if (mode == "Pickup") then
-        self:PickupQuest(questid,class)
+        self:PickupQuest(questid,class, race)
     end
     if (mode == "Turnin") then
-        self:TurnInQuest(questid, class)
+        self:TurnInQuest(questid, class, race)
     end
     if (mode == "DoQuest") then
-        self:DoQuestTask(questid, class)
+        self:DoQuestTask(questid, class, race)
     end
     if (mode == "Kill") then
 
@@ -224,7 +236,7 @@ if UnitIsDeadOrGhost('player') then
     return
 end
 if DMW.Settings.profile.Quest[1] then
-    self:ParseProfile(DMW.Settings.profile.Quest[1][1], DMW.Settings.profile.Quest[1][2], DMW.Settings.profile.Quest[1][3])
+    self:ParseProfile(DMW.Settings.profile.Quest[1][1], DMW.Settings.profile.Quest[1][2], DMW.Settings.profile.Quest[1][3], DMW.Settings.profile.Quest[1][4])
 end
 end
 
