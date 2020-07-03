@@ -9,6 +9,8 @@ local CurrentTab = "GeneralTab"
 local TabIndex = 2
 local currentProfile
 local currentLoadedProfiles = {}
+local currentProfileQuest
+local currentLoadedProfilesQuest = {}
 local profileName
 
 local exportTypes = {
@@ -1523,14 +1525,44 @@ local Options = {
                             LoadProfile()
                         end
                     },
+                    profileSpacerQuest = {
+                        type = "header",
+                        order = 2,
+                        name = "Quests"
+                    },
+                    loadedProfilesQuest = {
+                        type = "select",
+                        order = 3,
+                        name = "Profiles Quest",
+                        desc = "Loaded Profiles From Profiles Folder",
+                        width = "full",
+                        values = {},
+                        style = "dropdown",
+                        get = function()
+                            return currentProfileQuest
+                        end,
+                        set = function(info, value)
+                            currentProfileQuest = value
+                        end
+                    },
+                    loadProfilesQuest = {
+                        type = "execute",
+                        order = 4,
+                        name = "Load Profile Quest",
+                        desc = "Load Profiles Located In Lilium/Grindbot/Profiles",
+                        width = "full",
+                        func = function()
+                            LoadProfileQuest()
+                        end
+                    },
                     profileSpacer = {
                         type = "header",
-                        order = 3,
+                        order = 5,
                         name = ""
                     },
                     profileNom = {
                         type = "input",
-                        order = 4,
+                        order = 5,
                         name = "Profile Name",
                         desc = "Name Of The Profile To Save As",
                         width = "full",
@@ -1695,6 +1727,50 @@ function LoadProfile()
     end
 end
 
+function LoadProfileQuest()
+    if currentProfileQuest then
+        local profileContent = ReadFile(GetHackDirectory() .. "/Lilium/Questbot/" .. currentLoadedProfilesQuest[currentProfileQuest])
+        if profileContent then
+            profileName = currentLoadedProfilesQuest[currentProfileQuest]:gsub(".lua", "")
+            DMW.Settings.profile.Quest = ParseQuest(profileContent)
+            DMW.Bot.Log:DebugInfo('Loaded Profile ' .. currentLoadedProfilesQuest[currentProfileQuest])
+        end
+    end
+end
+
+function ParseQuest(profile)
+    local questlist = {}
+    local lines = { ("\n"):split(profile) }
+    for _, line in pairs(lines) do
+        local tags = { ("|"):split(line) }
+        local parsed = parseQuestLine(tags, line)
+        if parsed then
+            table.insert(questlist, parseQuestLine(tags, line))
+        end
+    end
+    return questlist
+end
+function parseQuestLine(tags, line)
+    local action = tags[1]:sub(1,1)
+    local questid = tags[3]
+    local act = nil
+    local class = nil
+    if (action == "A") then
+        act = "Pickup"
+    end
+    if (action == "C") then
+        act = "DoQuest"
+    end
+    if (action == "T" or action == "t") then
+        act = "Turnin"
+    end
+    if act then
+        local class, race  = line:match("|C|([^|]*)|?"), line:match("|R|([^|]*)|?")
+        return { act, questid, class }
+    end
+    return nil
+end
+
 function CheckNextProfile()
     local loadNextProfile = DMW.Settings.profile.Grind.loadNextProfile
     local nextProfileLevel = DMW.Settings.profile.Grind.nextProfileLevel
@@ -1726,6 +1802,15 @@ function SetProfiles()
     currentLoadedProfiles = Files
     Options.args.GrindTab.args.ProfilesTab.args.loadedProfiles.values = Pleasant
     Options.args.GrindTab.args.ProfilesTab.args.nextProfileName.values = Pleasant
+end
+
+function SetProfilesQuest()
+    local Files = GetDirectoryFiles(GetHackDirectory() .. "/Lilium/Questbot/*.lua")
+    local Pleasant = {}
+    for i = 1, #Files do content = Files[i]:gsub(".lua", "") table.insert(Pleasant, content) end
+
+    currentLoadedProfilesQuest = Files
+    Options.args.GrindTab.args.ProfilesTab.args.loadedProfilesQuest.values = Pleasant
 end
 
 function SaveProfile(name)

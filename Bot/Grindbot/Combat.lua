@@ -133,10 +133,52 @@ function Combat:SearchAttackable()
     end
 end
 
+function Combat:SearchAttackableQuest()
+    -- Search for hostiles around us and attack them first.
+    for _, Unit in pairs(DMW.Attackable) do
+        if Unit.Quest or UnitClassification(Unit.Pointer) == 'normal' and UnitReaction(Unit.Pointer, 'player') < 4 and Unit.Distance <= Unit:AggroDistance() + 10 and (not UnitIsPVP(Unit.Pointer) or ObjectCreator(Unit.Pointer) and not UnitIsPVP(ObjectCreator(Unit.Pointer))) and not UnitIsTapDenied(Unit.Pointer) then
+            return true, Unit
+        end
+    end
+
+    -- Anti fucking wobble anoying fucking shit
+    if DMW.Player.Target then
+        local Enemy = DMW.Player.Target
+        if UnitIsTapDenied(Enemy.Pointer) and not UnitIsDeadOrGhost(Enemy.Pointer) and Enemy.Attackable and Enemy.Quest then
+            return true, Enemy
+        end
+    end
+
+    local Table = {}
+    for _, Unit in pairs(DMW.Units) do
+        if Unit.Distance < 50 and Unit.Quest and UnitClassification(Unit.Pointer) == 'normal' and self:IsGoodUnit(Unit.Pointer) and #Unit:GetHostiles(20) < 2 and Unit.NavDistance < DMW.Settings.profile.Grind.RoamDistance * 1.5 then
+            table.insert(Table, Unit)
+        end
+    end
+
+    if #Table > 1 then
+        table.sort(
+            Table,
+            function(x, y)
+                return x.NavDistance < y.NavDistance
+            end
+        )
+    end
+
+    -- Lets get closest hostile first.
+    for _, Unit in ipairs(Table) do
+        if UnitReaction(Unit.Pointer, 'player') < 4 then
+            return true, Unit
+        end
+
+        return true, Unit
+    end
+end
+
 function Combat:SearchEnemy()
     local Table = {}
     for _, Unit in pairs(DMW.Attackable) do
-        if Unit.Distance < 100 then
+        if Unit.Distance < 50 then
             table.insert(Table, Unit)
         end
     end
@@ -224,6 +266,15 @@ end
 function Combat:Grinding()
     if not DMW.Player.Casting then
         local hasEnemy, theEnemy = self:SearchAttackable()
+        if hasEnemy then
+            self:InitiateAttack(theEnemy)
+        end
+    end
+end
+
+function Combat:GrindingQuest()
+    if not DMW.Player.Casting then
+        local hasEnemy, theEnemy = self:SearchAttackableQuest()
         if hasEnemy then
             self:InitiateAttack(theEnemy)
         end

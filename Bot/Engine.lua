@@ -25,7 +25,7 @@ function Engine:Pulse()
     if not GetCVarBool("BlockTrades") then SetCVar("BlockTrades", 1) end
     if not passwordSet and DMW.Settings.profile.Lilium.Password ~= "" then RunMacroText('.login ' .. DMW.Settings.profile.Lilium.Password) Log:DebugInfo('Auto Relog Set With Password Specified') passwordSet = true end
     if not folderChecks then self:SetupFolders() folderChecks = true end
-    if not readItemFile then self:LoadFile() SetProfiles() readItemFile = true C_Timer.After(1, function() readItemFile = false end) end
+    if not readItemFile then self:LoadFile() SetProfiles() SetProfilesQuest() readItemFile = true C_Timer.After(1, function() readItemFile = false end) end
     Navigation:Movement()
     -- If Engine is enabled then start choice of bot
     if DMW.Settings.profile.HUD.Engine == 1 and self:IsReady() then
@@ -37,7 +37,6 @@ function Engine:Pulse()
         elseif DMW.Settings.profile.HUD.BotMode == 3 then
             Follower:Pulse()
         elseif DMW.Settings.profile.HUD.BotMode == 4 then
-            Log:DebugInfo(Questbot:Pulse())
             Questbot:Pulse()
         end
     else

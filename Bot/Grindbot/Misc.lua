@@ -151,6 +151,7 @@ function Misc:AddClickSpot(point, spotTable)
     end
 
     table.insert(spotTable, point)
+    Log:DebugInfo("Added that point")
 
     PauseFlags.Hotspotting = true
     C_Timer.After(0.3, function()

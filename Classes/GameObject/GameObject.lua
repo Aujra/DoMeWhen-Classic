@@ -46,6 +46,10 @@ function GameObject:IsQuest()
     return false
 end
 
+function GameObject:IsQuestByName(questid)
+if questid == 753 and self.Name == "Water Pitcher" then return true end
+end
+
 function GameObject:IsHerb()
     if DMW.Enums.Herbs[self.ObjectID] and ((DMW.Player.Professions.Herbalism and DMW.Enums.Herbs[self.ObjectID].SkillReq <= DMW.Player.Professions.Herbalism)) then
         return true

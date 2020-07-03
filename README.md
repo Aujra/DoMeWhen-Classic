@@ -20,6 +20,14 @@
 - Press the Heroic Strike icon near your Minimap and there you can find the "Lilium" Tab.
 - Choose your preferred settings.
 
+## Questbot
+- Install addons AutoGear (https://www.curseforge.com/wow/addons/autogear) and Questie (https://www.curseforge.com/wow/addons/questie)
+- Turn on Auto pickup and auto complete quesats in Questie addon (/questie)
+- Turn on auto loot in the wow interface options
+- Profiles should be install under the EWTDIRECTOR/Lilium/QuestBot and be lua files
+- THey will then show in the profile section of the bot config just like you would load grind profiles
+- 1-60 profiles are included in this repository under the Profiles folder
+
 ## Class Rotations (NEEDED!)
 - Download a class rotation as a separate addon, https://github.com/search?q=DMWC Classes will be named DMWC-ClassName (DMWC-Mage, DMWC-Rogue)
 - If you want to bot on a mage I strongly recommend https://github.com/NeerOC/DMWC-Mage

@@ -3,6 +3,7 @@ local Unit = DMW.Classes.Unit
 local LibCC = LibStub("LibClassicCasterinoDMW", true)
 local UnitIsUnit
 local Throttle = false
+local Log = DMW.Bot.Log
 
 function Unit:New(Pointer)
     if not UnitIsUnit then
@@ -374,6 +375,11 @@ function Unit:PowerPct()
     local Power = UnitPower(self.Pointer)
     local PowerMax = UnitPowerMax(self.Pointer)
     return Power / PowerMax * 100
+end
+
+function Unit:GetDynamicFlags()
+    local flags = ObjectDescriptor(self.Pointer, GetOffset("CGObjectData__DynamicFlags"), "int")
+    Log:DebugInfo(flags)
 end
 
 function Unit:HasFlag(Flag)

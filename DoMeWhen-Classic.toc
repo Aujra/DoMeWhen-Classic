@@ -74,6 +74,9 @@ Bot\Grindbot\Grindbot.lua
 Bot\Follower\Follower.lua
 
 Bot\Fishbot\Fishbot.lua
+
+Bot\Questbot\QuestbotGrind.lua
+Bot\Questbot\QuestHelper.lua
 Bot\Questbot\Questbot.lua
 
 Bot\Engine.lua
