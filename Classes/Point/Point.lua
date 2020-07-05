@@ -54,7 +54,6 @@ end
 function Point:NearAny(points, yards)
     for i = 1, #points do
         point = points[i]
-
         if self:Distance(point) < yards then
             return true
         end

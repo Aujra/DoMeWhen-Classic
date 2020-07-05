@@ -131,8 +131,6 @@ function Questbot:PickupQuest(questID, class, race)
         return
     end
     local r, ren = UnitRace("player")
-    print(race)
-    print(r)
     if (race and r ~= race) then
         head = table.remove(DMW.Settings.profile.Quest, 1)
         return
@@ -235,6 +233,7 @@ if UnitIsDeadOrGhost('player') then
     TaskFrame.text:SetText('Corpse Run')
     return
 end
+
 if DMW.Settings.profile.Quest[1] then
     self:ParseProfile(DMW.Settings.profile.Quest[1][1], DMW.Settings.profile.Quest[1][2], DMW.Settings.profile.Quest[1][3], DMW.Settings.profile.Quest[1][4])
 end
@@ -267,9 +266,19 @@ function Questbot:DoQuestTask(questid, class)
         return
     end
  
-    DMW.Settings.profile.Grind.HotSpots = QuestHelper:GetHotSpots(questid)
-    if #DMW.Settings.profile.Grind.HotSpots <= 0 then
-        table.insert(DMW.Settings.profile.Grind.HotSpots, Point(DMW.Player.PosX, DMW.Player.PosY, DMW.Player.PosZ))
+    -- DMW.Settings.profile.Grind.HotSpots = QuestHelper:GetHotSpots(questid)
+    
+    local objectives = QuestHelper:GetObjectiveCount(questid)
+    for i = 1, objectives, 1 do
+        local itemType, itemName, numItems, numNeeded, isDone = QuestHelper:GetLeaderBoardDetails(i, questid)
+        if itemType == "item" then
+            local item, itemid = QuestHelper:GetItemByName(itemName)
+            DMW.Settings.profile.Grind.HotSpots = QuestHelper:GetHotSpotsByItem(itemid)
+        end
+        if itemType == "monster" then
+            local npc, npcid = QuestHelper:GetNPCByName(itemName)
+            DMW.Settings.profile.Grind.HotSpots = QuestHelper:GetHotSpotsByNPC(npcid)
+        end
     end
 
     if DMW.Player.Casting then self:ResetMoveToLoot() end -- Reset if casting
@@ -278,9 +287,7 @@ function Questbot:DoQuestTask(questid, class)
  if not (PauseFlags.skinDelay and DMW.Settings.profile.Grind.doSkin) and not (PauseFlags.waitingForLootable and DMW.Settings.profile.Helpers.AutoLoot) then 
     self:SwapMode(questid) 
 end
-if (HasQuestNPC) then
-    Questbot.Mode = Modes.Interact
-end
+
  if Questbot.Mode ~= Modes.Looting then Questbot:ResetMoveToLoot() end
 
  if Questbot.Mode == Modes.Dead then
@@ -308,8 +315,11 @@ if Questbot.Mode == Modes.Looting then
     TaskFrame.text:SetText('Looting')
 end
 
-if (Questbot.Mode == Modes.Interact) then
-    self:NPCInteract()
+local hasNPC, theNPC = self:QuestNPCSearch(questid)
+
+if (hasNPC) then
+    Questbot.Mode = Modes.Interact
+    self:NPCInteract(questid)
     TaskFrame.text:SetText("Interacting with NPC")
 end
 
@@ -423,10 +433,6 @@ function Questbot:SwapMode(thequest)
         return
     end
 
-    if hasNPC then
-        self:NPCInteract(thequest)
-    end
-
     -- If we are on vendor task and the Vendor.lua has determined the task to be done then we set the vendor task to false.
     if VendorTask and Vendor:TaskDone() then
         VendorTask = false
@@ -457,11 +463,6 @@ function Questbot:SwapMode(thequest)
             VendorTask = true
         end
         return
-    end
-
-    -- Interact with quest NPC --
-    if (HasQuestNPC) then
-        Questbot.Mode = Modes.Interact
     end
 
     -- Gather when we are within 100 yards of hotspot
@@ -498,12 +499,13 @@ end
 
 function Questbot:NPCInteract(thequest)
     local hasNPC, theNPC = self:QuestNPCSearch(thequest)
-    Navigation:MoveTo(theNPC.PosX, theNPC.PosY,theNPC.PosZ)
+    Navigation:MoveTo(theNPC.PosX, theNPC.PosY, theNPC.PosZ)
     if (theNPC.Distance < 3) then
         Navigation:StopMoving()
         InteractUnit(theNPC.Pointer)
         if (thequest == 5441) then
-        UseItemByName("Foreman's Blackjack")
+            
+            UseItemByName("Foreman's Blackjack")
         end
     end
 end
