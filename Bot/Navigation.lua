@@ -379,6 +379,13 @@ function Navigation:GetPathDistanceTo(unit)
     end
 end
 
+function Navigation:ReturnPathEndTest(x,y,z)
+    NavPath = CalculatePath(GetMapId(), DMW.Player.PosX, DMW.Player.PosY, DMW.Player.PosZ, x, y, z, false, true, 1)
+    if NavPath then
+        return NavPath[#NavPath][1],NavPath[#NavPath][2],NavPath[#NavPath][3]
+    end
+end
+
 function Navigation:ReturnPathEnd()
     if NavPath then
         return NavPath[#NavPath][1],NavPath[#NavPath][2],NavPath[#NavPath][3]

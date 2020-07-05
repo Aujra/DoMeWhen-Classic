@@ -269,15 +269,19 @@ function Questbot:DoQuestTask(questid, class)
     -- DMW.Settings.profile.Grind.HotSpots = QuestHelper:GetHotSpots(questid)
     
     local objectives = QuestHelper:GetObjectiveCount(questid)
-    for i = 1, objectives, 1 do
+    for i = 1, tonumber(objectives), 1 do
         local itemType, itemName, numItems, numNeeded, isDone = QuestHelper:GetLeaderBoardDetails(i, questid)
-        if itemType == "item" then
+        if not isDone and itemType == "item" then
             local item, itemid = QuestHelper:GetItemByName(itemName)
             DMW.Settings.profile.Grind.HotSpots = QuestHelper:GetHotSpotsByItem(itemid)
         end
-        if itemType == "monster" then
+        if not isDone and itemType == "monster" then
             local npc, npcid = QuestHelper:GetNPCByName(itemName)
             DMW.Settings.profile.Grind.HotSpots = QuestHelper:GetHotSpotsByNPC(npcid)
+        end
+        if not isDOne and itemType == "object" then
+            local object, objectid = QuestHelper:GetObjectByName(itemName)
+            DMW.Settings.profile.Grind.HotSpots = QuestHelper:GetHotSpotsByObject(objectid)
         end
     end
 
